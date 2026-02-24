@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
-import { Room, RoomSchema } from './schemas/room.schema';
-import { Sound, SoundSchema } from './schemas/sound.schema';
+import { BoardsModule } from './boards/boards.module';
+import { AuthModule } from './auth/auth.module';
+import { Board, BoardSchema } from './schemas/board.schema';
 
 @Module({
   imports: [
@@ -24,10 +25,9 @@ import { Sound, SoundSchema } from './schemas/sound.schema';
         return connection;
       },
     }),
-    MongooseModule.forFeature([
-      { name: Room.name, schema: RoomSchema },
-      { name: Sound.name, schema: SoundSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Board.name, schema: BoardSchema }]),
+    AuthModule,
+    BoardsModule,
   ],
   controllers: [AppController],
   providers: [],
