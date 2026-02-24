@@ -21,17 +21,12 @@ describe('BoardsService', () => {
   const mockBoardId = '607f1f77bcf86cd799439021';
 
   beforeEach(async () => {
-    // Mock Board model
-    mockBoardModel = {
-      findOne: jest.fn(),
-      findById: jest.fn(),
-      find: jest.fn(),
-      findByIdAndUpdate: jest.fn(),
-      prototype: {
-        save: jest.fn(),
-        populate: jest.fn(),
-      },
-    };
+    // Mock Board model constructor
+    mockBoardModel = jest.fn();
+    mockBoardModel.findOne = jest.fn();
+    mockBoardModel.findById = jest.fn();
+    mockBoardModel.find = jest.fn();
+    mockBoardModel.findByIdAndUpdate = jest.fn();
 
     // Mock User model
     mockUserModel = {
@@ -289,6 +284,7 @@ describe('BoardsService', () => {
         members: [mockUserId],
         pendingRequests: [{ userId: mockUserId2, requestedAt: new Date() }],
         save: jest.fn().mockResolvedValue({
+          slug: 'test-board',
           populate: jest.fn().mockResolvedValue({
             _id: mockBoardId,
             members: [mockUserId, mockUserId2],

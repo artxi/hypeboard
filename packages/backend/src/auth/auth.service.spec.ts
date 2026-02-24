@@ -12,14 +12,10 @@ describe('AuthService', () => {
   let mockJwtService: any;
 
   beforeEach(async () => {
-    // Create mock user model
-    mockUserModel = {
-      findOne: jest.fn(),
-      findById: jest.fn(),
-      prototype: {
-        save: jest.fn(),
-      },
-    };
+    // Create mock user model constructor
+    mockUserModel = jest.fn();
+    mockUserModel.findOne = jest.fn();
+    mockUserModel.findById = jest.fn();
 
     // Create mock JWT service
     mockJwtService = {
