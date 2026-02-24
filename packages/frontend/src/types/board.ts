@@ -23,6 +23,21 @@ export interface Board {
   lastActivity: Date;
 }
 
+export interface Sound {
+  _id: string;
+  boardId: string;
+  name: string;
+  fileId?: string;
+  filename: string;
+  mimeType: string;
+  fileSize: number;
+  duration?: number;
+  uploadedBy: string;
+  playCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateBoardResponse {
   message: string;
   board: Board;
