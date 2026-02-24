@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hypeboard-frontend
+    env: static
+    buildCommand: HUSKY=0 pnpm install --ignore-scripts && pnpm --filter frontend build
+    staticPublishPath: ./packages/frontend/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: HUSKY
+        value: 0
