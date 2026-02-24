@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Room } from './schemas/room.schema';
+import { Board } from './schemas/board.schema';
 
 @Controller()
 export class AppController {
   constructor(
-    @InjectModel(Room.name) private roomModel: Model<Room>,
+    @InjectModel(Board.name) private boardModel: Model<Board>,
   ) {}
   @Get()
   getHello() {
@@ -28,10 +28,10 @@ export class AppController {
   @Get('db-test')
   async testDatabase() {
     try {
-      const roomCount = await this.roomModel.countDocuments();
+      const boardCount = await this.boardModel.countDocuments();
       return {
         message: 'Database connected!',
-        roomCount,
+        boardCount,
       };
     } catch (error) {
       return {

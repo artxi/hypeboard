@@ -1,10 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export type RoomDocument = Room & Document;
+export type BoardDocument = Board & Document;
+
+export interface AccessRequest {
+  username: string;
+  requestedAt: Date;
+  message?: string;
+}
 
 @Schema({ timestamps: true })
-export class Room {
+export class Board {
   @Prop({ required: true })
   name: string;
 
@@ -16,6 +22,27 @@ export class Room {
 
   @Prop({ type: [String], default: [] })
   admins: string[];
+
+  @Prop({ type: [String], default: [] })
+  members: string[];
+
+  @Prop({
+    type: [
+      {
+        username: { type: String, required: true },
+        requestedAt: { type: Date, default: Date.now },
+        message: { type: String },
+      },
+    ],
+    default: [],
+  })
+  pendingRequests: AccessRequest[];
+
+  @Prop({ required: true, unique: true, index: true })
+  inviteCode: string;
+
+  @Prop({ default: false })
+  isPublic: boolean;
 
   @Prop({
     type: {
@@ -35,4 +62,4 @@ export class Room {
   lastActivity: Date;
 }
 
-export const RoomSchema = SchemaFactory.createForClass(Room);
+export const BoardSchema = SchemaFactory.createForClass(Board);

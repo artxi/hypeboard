@@ -5,8 +5,8 @@ export type SoundDocument = Sound & Document;
 
 @Schema({ timestamps: true })
 export class Sound {
-  @Prop({ type: Types.ObjectId, ref: 'Room', required: true, index: true })
-  roomId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Board', required: true, index: true })
+  boardId: Types.ObjectId;
 
   @Prop({ required: true })
   name: string;
