@@ -143,7 +143,6 @@ function MainApp() {
           boards={boards}
           currentUser={user}
           onBoardSelect={handleSelectBoard}
-          onBoardsUpdate={fetchBoards}
           onManageBoard={() => {}}
         />
       </div>

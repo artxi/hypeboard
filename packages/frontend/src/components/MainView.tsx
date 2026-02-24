@@ -8,7 +8,6 @@ interface MainViewProps {
   boards: Board[];
   currentUser: { username: string };
   onBoardSelect: (slug: string | null) => void;
-  onBoardsUpdate: () => void;
   onManageBoard?: () => void;
 }
 
@@ -17,7 +16,6 @@ export function MainView({
   boards,
   currentUser,
   onBoardSelect,
-  onBoardsUpdate,
   onManageBoard,
 }: MainViewProps) {
   const boardDetailRef = useRef<BoardDetailViewHandle>(null);

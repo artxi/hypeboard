@@ -20,7 +20,7 @@ export const BoardDetailView = forwardRef<BoardDetailViewHandle, BoardDetailView
   const [userRole, setUserRole] = useState<'admin' | 'member' | 'none'>('none');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [sounds, setSounds] = useState<Sound[]>([]);
+  const [sounds] = useState<Sound[]>([]);
   const [adminPanelOpen, setAdminPanelOpen] = useState(false);
 
   const fetchBoard = async () => {
