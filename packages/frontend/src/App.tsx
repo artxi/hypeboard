@@ -1,104 +1,138 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { UserProvider } from './contexts/UserContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
+import { MainView } from './components/MainView';
+import { LoginModal } from './components/LoginModal';
+import { InvitePage } from './pages/InvitePage';
+import { api } from './services/api';
+import type { Board, BoardResponse } from './types/board';
 
-interface HealthResponse {
-  status: string;
-  timestamp: number;
-  uptime: number;
-}
+function MainApp() {
+  const { user, loading: authLoading, logout } = useAuth();
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [selectedBoardSlug, setSelectedBoardSlug] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [loadingBoards, setLoadingBoards] = useState(false);
 
-interface HelloResponse {
-  message: string;
-  version: string;
+  // Fetch boards when user is authenticated
+  useEffect(() => {
+    if (user) {
+      fetchBoards();
+    }
+  }, [user]);
+
+  const fetchBoards = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingBoards(true);
+      const data = await api.getUserBoards(user.username);
+      setBoards(data);
+    } catch (err: any) {
+      console.error('Failed to fetch boards:', err);
+    } finally {
+      setLoadingBoards(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setBoards([]);
+    setSelectedBoardSlug(null);
+  };
+
+  const handleLogoClick = () => {
+    setSelectedBoardSlug(null);
+  };
+
+  const handleSelectBoard = (slug: string | null) => {
+    setSelectedBoardSlug(slug);
+    // Close sidebar on mobile when board is selected
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const getSelectedBoardName = () => {
+    if (!selectedBoardSlug) return null;
+    const board = boards.find((b) => b.slug === selectedBoardSlug);
+    return board?.name || null;
+  };
+
+  // Show loading screen during auth initialization
+  if (authLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // Show login modal if not authenticated
+  if (!user) {
+    return <LoginModal isOpen={true} />;
+  }
+
+  // Convert boards to BoardResponse format for Sidebar
+  const boardResponses: BoardResponse[] = boards.map((board) => ({
+    board,
+    userRole: board.admins?.includes(user.username) ? 'admin' : 'member',
+  }));
+
+  return (
+    <div className="app-container">
+      <Header
+        currentUser={user}
+        selectedBoardName={getSelectedBoardName()}
+        onLogout={handleLogout}
+        onLogoClick={handleLogoClick}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
+      <div className="app-body">
+        <Sidebar
+          boards={boardResponses}
+          selectedBoardSlug={selectedBoardSlug}
+          onSelectBoard={handleSelectBoard}
+          onCreateBoard={() => {
+            // Create board is handled in BoardListView
+            // Just deselect current board to show the list
+            setSelectedBoardSlug(null);
+          }}
+          isOpen={sidebarOpen}
+        />
+        <MainView
+          selectedBoardSlug={selectedBoardSlug}
+          boards={boards}
+          currentUser={user}
+          onBoardSelect={handleSelectBoard}
+          onBoardsUpdate={fetchBoards}
+        />
+      </div>
+    </div>
+  );
 }
 
 function App() {
-  const [healthData, setHealthData] = useState<HealthResponse | null>(null);
-  const [helloData, setHelloData] = useState<HelloResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch both endpoints
-        const [healthRes, helloRes] = await Promise.all([
-          fetch(`${API_URL}/health`),
-          fetch(`${API_URL}/`),
-        ]);
-
-        if (!healthRes.ok || !helloRes.ok) {
-          throw new Error('Failed to fetch from backend');
-        }
-
-        const healthJson = await healthRes.json();
-        const helloJson = await helloRes.json();
-
-        setHealthData(healthJson);
-        setHelloData(helloJson);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [API_URL]);
-
   return (
-    <div className="app">
-      <div className="container">
-        <h1>🎉 Hello World - HypeBoard</h1>
-
-        <div className="info">
-          <p className="subtitle">Frontend successfully deployed!</p>
-          <p className="api-info">API URL: <code>{API_URL}</code></p>
-        </div>
-
-        {loading && (
-          <div className="status loading">
-            <p>⏳ Loading data from backend...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="status error">
-            <p>❌ Error: {error}</p>
-            <p className="hint">
-              Make sure the backend is running at {API_URL}
-            </p>
-          </div>
-        )}
-
-        {!loading && !error && healthData && helloData && (
-          <div className="status success">
-            <h2>✅ Backend Connection Successful!</h2>
-
-            <div className="data-section">
-              <h3>Root Endpoint Response:</h3>
-              <div className="data-box">
-                <p><strong>Message:</strong> {helloData.message}</p>
-                <p><strong>Version:</strong> {helloData.version}</p>
-              </div>
-            </div>
-
-            <div className="data-section">
-              <h3>Health Endpoint Response:</h3>
-              <div className="data-box">
-                <p><strong>Status:</strong> {healthData.status}</p>
-                <p><strong>Timestamp:</strong> {new Date(healthData.timestamp).toLocaleString()}</p>
-                <p><strong>Uptime:</strong> {Math.floor(healthData.uptime)}s</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <AuthProvider>
+      <UserProvider>
+        <ThemeProvider>
+          <BrowserRouter>
+            <Routes>
+              {/* Keep invite page as a separate route since it needs to be publicly accessible */}
+              <Route path="/invite/:code" element={<InvitePage />} />
+              {/* All other routes use the single-page app */}
+              <Route path="*" element={<MainApp />} />
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </UserProvider>
+    </AuthProvider>
   );
 }
 
