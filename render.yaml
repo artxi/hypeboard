@@ -9,3 +9,5 @@ services:
         value: 18
       - key: HUSKY
         value: 0
+      - key: CI
+        value: true
