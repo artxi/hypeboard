@@ -31,7 +31,28 @@ export class BoardsController {
     if (!username) {
       throw new NotFoundException('Username required');
     }
-    return this.boardsService.findBoardsByUsername(username);
+    const boards = await this.boardsService.findBoardsByUsername(username);
+
+    // Transform populated user objects back to usernames for backward compatibility
+    return boards.map(board => this.transformBoardResponse(board));
+  }
+
+  /**
+   * Helper to transform board response with populated users back to usernames
+   */
+  private transformBoardResponse(board: any) {
+    const boardObj = board.toObject ? board.toObject() : board;
+    return {
+      ...boardObj,
+      createdBy: boardObj.createdBy?.username || boardObj.createdBy,
+      admins: boardObj.admins?.map((admin: any) => admin?.username || admin) || [],
+      members: boardObj.members?.map((member: any) => member?.username || member) || [],
+      pendingRequests: boardObj.pendingRequests?.map((req: any) => ({
+        username: req.userId?.username || req.userId,
+        requestedAt: req.requestedAt,
+        message: req.message,
+      })) || [],
+    };
   }
 
   /**
@@ -46,7 +67,7 @@ export class BoardsController {
     const inviteLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/invite/${board.inviteCode}`;
 
     return {
-      board,
+      board: this.transformBoardResponse(board),
       inviteLink,
     };
   }
@@ -58,13 +79,14 @@ export class BoardsController {
   @Get('invite/:code')
   async getBoardByInviteCode(@Param('code') code: string) {
     const board = await this.boardsService.findByInviteCode(code);
+    const boardObj = board.toObject ? board.toObject() : board;
 
     // Return only basic info for the join page
     return {
-      name: board.name,
-      slug: board.slug,
-      createdBy: board.createdBy,
-      isPublic: board.isPublic,
+      name: boardObj.name,
+      slug: boardObj.slug,
+      createdBy: boardObj.createdBy?.username || boardObj.createdBy,
+      isPublic: boardObj.isPublic,
     };
   }
 
@@ -78,32 +100,31 @@ export class BoardsController {
     @Query('username') username?: string,
   ) {
     const board = await this.boardsService.findBySlug(slug);
+    const boardObj = board.toObject ? board.toObject() : board;
 
     // Check if user has access (member or admin)
-    if (
-      username &&
-      !board.members.includes(username) &&
-      !board.admins.includes(username)
-    ) {
+    const isMember = username ? await this.boardsService.isMember(board._id.toString(), username) : false;
+    const isAdmin = username ? await this.boardsService.isAdmin(board._id.toString(), username) : false;
+
+    if (username && !isMember && !isAdmin) {
       throw new NotFoundException('Board not found or access denied');
     }
 
-    // Return different data based on whether user is an admin
-    const isAdmin = username ? board.admins.includes(username) : false;
+    const transformedBoard = this.transformBoardResponse(boardObj);
 
     return {
-      name: board.name,
-      slug: board.slug,
-      createdBy: board.createdBy,
-      settings: board.settings,
-      lastActivity: board.lastActivity,
-      isPublic: board.isPublic,
+      name: transformedBoard.name,
+      slug: transformedBoard.slug,
+      createdBy: transformedBoard.createdBy,
+      settings: transformedBoard.settings,
+      lastActivity: transformedBoard.lastActivity,
+      isPublic: transformedBoard.isPublic,
       // Only show member list and pending requests to admins
       ...(isAdmin && {
-        admins: board.admins,
-        members: board.members,
-        pendingRequests: board.pendingRequests,
-        inviteCode: board.inviteCode,
+        admins: transformedBoard.admins,
+        members: transformedBoard.members,
+        pendingRequests: transformedBoard.pendingRequests,
+        inviteCode: transformedBoard.inviteCode,
       }),
     };
   }
@@ -150,9 +171,11 @@ export class BoardsController {
       approveMemberDto.usernameToApprove,
     );
 
+    const transformedBoard = this.transformBoardResponse(updatedBoard);
+
     return {
       message: 'Member approved successfully',
-      members: updatedBoard.members,
+      members: transformedBoard.members,
     };
   }
 
@@ -203,8 +226,10 @@ export class BoardsController {
       throw new NotFoundException('Board not found or access denied');
     }
 
+    const transformedBoard = this.transformBoardResponse(board);
+
     return {
-      pendingRequests: board.pendingRequests,
+      pendingRequests: transformedBoard.pendingRequests,
     };
   }
 }

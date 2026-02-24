@@ -1,5 +1,6 @@
-import { BoardListView } from './BoardListView';
-import { BoardDetailView } from './BoardDetailView';
+import { useRef } from 'react';
+import { WelcomeView } from './WelcomeView';
+import { BoardDetailView, BoardDetailViewHandle } from './BoardDetailView';
 import type { Board } from '../types/board';
 
 interface MainViewProps {
@@ -8,6 +9,7 @@ interface MainViewProps {
   currentUser: { username: string };
   onBoardSelect: (slug: string | null) => void;
   onBoardsUpdate: () => void;
+  onManageBoard?: () => void;
 }
 
 export function MainView({
@@ -16,23 +18,29 @@ export function MainView({
   currentUser,
   onBoardSelect,
   onBoardsUpdate,
+  onManageBoard,
 }: MainViewProps) {
+  const boardDetailRef = useRef<BoardDetailViewHandle>(null);
+
+  // Expose method to open admin panel
+  if (onManageBoard) {
+    (window as any).__openAdminPanel = () => {
+      boardDetailRef.current?.openAdminPanel();
+    };
+  }
+
   return (
     <div className="main-view">
       <div className="main-view-content">
         {selectedBoardSlug ? (
           <BoardDetailView
+            ref={boardDetailRef}
             slug={selectedBoardSlug}
             currentUser={currentUser}
             onBack={() => onBoardSelect(null)}
           />
         ) : (
-          <BoardListView
-            boards={boards}
-            currentUser={currentUser}
-            onBoardSelect={onBoardSelect}
-            onBoardsUpdate={onBoardsUpdate}
-          />
+          <WelcomeView currentUser={currentUser} boardCount={boards.length} />
         )}
       </div>
     </div>

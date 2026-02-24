@@ -46,8 +46,13 @@ export function BoardListView({
   return (
     <>
       <div className="boards-header">
-        <h1>Your Boards</h1>
-        <p>Manage and access your collaborative soundboards</p>
+        <div>
+          <h1>Your Boards</h1>
+          <p>Manage and access your collaborative soundboards</p>
+        </div>
+        <Button onClick={() => setShowCreateModal(true)} variant="primary">
+          + New Board
+        </Button>
       </div>
 
       {boards.length === 0 ? (

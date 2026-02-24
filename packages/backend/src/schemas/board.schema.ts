@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 export type BoardDocument = Board & Document;
 
 export interface AccessRequest {
-  username: string;
+  userId: MongooseSchema.Types.ObjectId;
   requestedAt: Date;
   message?: string;
 }
@@ -17,19 +17,19 @@ export class Board {
   @Prop({ required: true, unique: true, index: true })
   slug: string;
 
-  @Prop({ required: true })
-  createdBy: string;
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+  createdBy: MongooseSchema.Types.ObjectId;
 
-  @Prop({ type: [String], default: [] })
-  admins: string[];
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+  admins: MongooseSchema.Types.ObjectId[];
 
-  @Prop({ type: [String], default: [] })
-  members: string[];
+  @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'User' }], default: [] })
+  members: MongooseSchema.Types.ObjectId[];
 
   @Prop({
     type: [
       {
-        username: { type: String, required: true },
+        userId: { type: MongooseSchema.Types.ObjectId, ref: 'User', required: true },
         requestedAt: { type: Date, default: Date.now },
         message: { type: String },
       },

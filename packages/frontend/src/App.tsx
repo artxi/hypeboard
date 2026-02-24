@@ -7,6 +7,7 @@ import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { MainView } from './components/MainView';
 import { LoginModal } from './components/LoginModal';
+import { CreateBoardModal } from './components/CreateBoardModal';
 import { InvitePage } from './pages/InvitePage';
 import { api } from './services/api';
 import type { Board, BoardResponse } from './types/board';
@@ -16,6 +17,11 @@ function MainApp() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoardSlug, setSelectedBoardSlug] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
+  const [showCreateBoardModal, setShowCreateBoardModal] = useState(false);
 
   // Fetch boards when user is authenticated
   useEffect(() => {
@@ -23,6 +29,11 @@ function MainApp() {
       fetchBoards();
     }
   }, [user]);
+
+  // Persist sidebar collapsed state
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   const fetchBoards = async () => {
     if (!user) return;
@@ -51,6 +62,26 @@ function MainApp() {
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
+  };
+
+  const handleManageBoard = (slug: string) => {
+    // Ensure the board is selected
+    if (selectedBoardSlug !== slug) {
+      setSelectedBoardSlug(slug);
+    }
+    // Trigger the admin panel to open via window global
+    setTimeout(() => {
+      (window as any).__openAdminPanel?.();
+    }, 100);
+  };
+
+  const handleCreateBoard = () => {
+    setShowCreateBoardModal(true);
+  };
+
+  const handleBoardCreated = (slug: string) => {
+    fetchBoards();
+    setSelectedBoardSlug(slug);
   };
 
   const getSelectedBoardName = () => {
@@ -94,12 +125,18 @@ function MainApp() {
           boards={boardResponses}
           selectedBoardSlug={selectedBoardSlug}
           onSelectBoard={handleSelectBoard}
-          onCreateBoard={() => {
-            // Create board is handled in BoardListView
-            // Just deselect current board to show the list
-            setSelectedBoardSlug(null);
-          }}
+          onCreateBoard={handleCreateBoard}
           isOpen={sidebarOpen}
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          currentUser={user}
+          onManageBoard={handleManageBoard}
+        />
+        <CreateBoardModal
+          isOpen={showCreateBoardModal}
+          onClose={() => setShowCreateBoardModal(false)}
+          currentUser={user}
+          onBoardCreated={handleBoardCreated}
         />
         <MainView
           selectedBoardSlug={selectedBoardSlug}
@@ -107,6 +144,7 @@ function MainApp() {
           currentUser={user}
           onBoardSelect={handleSelectBoard}
           onBoardsUpdate={fetchBoards}
+          onManageBoard={() => {}}
         />
       </div>
     </div>
