@@ -8,7 +8,12 @@
     "dev:frontend": "pnpm --filter frontend dev",
     "build:backend": "pnpm --filter backend build",
     "build:frontend": "pnpm --filter frontend build",
-    "build:all": "pnpm build:backend && pnpm build:frontend"
+    "build:all": "pnpm build:backend && pnpm build:frontend",
+    "test": "pnpm -r test",
+    "test:backend": "pnpm --filter backend test",
+    "test:frontend": "pnpm --filter frontend test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:ci": "pnpm -r test:ci"
   },
   "keywords": [],
   "author": "",
