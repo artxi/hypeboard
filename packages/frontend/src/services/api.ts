@@ -1,7 +1,6 @@
 import type {
   Board,
   CreateBoardResponse,
-  BoardResponse,
   AccessRequest,
   ApiError,
 } from '../types/board';

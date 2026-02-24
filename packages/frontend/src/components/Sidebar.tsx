@@ -1,4 +1,4 @@
-import { Board, BoardResponse } from '../types/board';
+import { BoardResponse } from '../types/board';
 
 interface SidebarProps {
   boards: BoardResponse[];

@@ -73,7 +73,7 @@ export function InvitePage() {
     setRequesting(true);
 
     try {
-      await api.requestAccess(board.slug, usernameInput, message || undefined);
+      await api.requestAccess(board.slug!, usernameInput, message || undefined);
       setUsername(usernameInput);
       setSuccess(true);
     } catch (err) {

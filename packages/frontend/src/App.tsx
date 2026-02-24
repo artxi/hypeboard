@@ -16,7 +16,6 @@ function MainApp() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [selectedBoardSlug, setSelectedBoardSlug] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [loadingBoards, setLoadingBoards] = useState(false);
 
   // Fetch boards when user is authenticated
   useEffect(() => {
@@ -29,13 +28,10 @@ function MainApp() {
     if (!user) return;
 
     try {
-      setLoadingBoards(true);
       const data = await api.getUserBoards(user.username);
       setBoards(data);
     } catch (err: any) {
       console.error('Failed to fetch boards:', err);
-    } finally {
-      setLoadingBoards(false);
     }
   };
 
