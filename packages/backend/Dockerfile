@@ -15,7 +15,7 @@ RUN npm install -g pnpm@10.30.0
 WORKDIR /app
 
 # Copy configuration and package files
-COPY .npmrc ./
+COPY .npmrc .pnpmfile.cjs ./
 COPY package.json pnpm-lock.yaml ./
 COPY packages/backend/package.json ./packages/backend/
 
@@ -41,7 +41,7 @@ RUN npm install -g pnpm@10.30.0
 WORKDIR /app
 
 # Copy configuration and package files
-COPY .npmrc ./
+COPY .npmrc .pnpmfile.cjs ./
 COPY package.json pnpm-lock.yaml ./
 COPY packages/backend/package.json ./packages/backend/
 
