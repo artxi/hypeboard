@@ -132,9 +132,9 @@ export class BoardsController {
 
   /**
    * POST /boards/:slug/request-access - Request access to a board
+   * Note: No auth guard - users can request access without being logged in
    */
   @Post(':slug/request-access')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async requestAccess(
     @Param('slug') slug: string,

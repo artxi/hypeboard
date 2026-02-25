@@ -1526,6 +1526,10 @@ textarea.input {
   transition: all 0.2s;
   cursor: pointer;
   position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .sound-card:hover {
