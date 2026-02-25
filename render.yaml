@@ -22,7 +22,7 @@ services:
   - type: web
     name: hypeboard-frontend
     env: static
-    buildCommand: npm install -g pnpm@10.30.0 && HUSKY=0 pnpm install --ignore-scripts && pnpm --filter frontend build
+    buildCommand: bash build.sh
     staticPublishPath: ./packages/frontend/dist
     envVars:
       - key: NODE_VERSION
@@ -30,4 +30,6 @@ services:
       - key: HUSKY
         value: 0
       - key: CI
+        value: true
+      - key: SKIP_INSTALL_DEPS
         value: true
