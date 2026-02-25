@@ -401,7 +401,12 @@ export class SoundsService {
 
     const userId = await this.getUserIdByUsername(username);
     const userIdStr = userId.toString();
-    return board.members.some((memberId) => memberId.toString() === userIdStr);
+
+    // Check both members and admins arrays
+    const isMember = board.members.some((memberId) => memberId.toString() === userIdStr);
+    const isAdmin = board.admins.some((adminId) => adminId.toString() === userIdStr);
+
+    return isMember || isAdmin;
   }
 
   /**
