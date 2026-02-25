@@ -195,19 +195,6 @@ export const SoundUploadModal: React.FC<SoundUploadModalProps> = ({
     setOriginalDuration(duration);
   };
 
-  const getTrimmedDuration = () => {
-    if (startTime !== undefined && endTime !== undefined) {
-      return endTime - startTime;
-    }
-    return originalDuration;
-  };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const handleDelete = async () => {
     if (!existingSound || !onDelete) return;
 
@@ -363,7 +350,7 @@ export const SoundUploadModal: React.FC<SoundUploadModalProps> = ({
               <div className="form-group">
                 <label>Audio Preview & Trim</label>
                 <AudioEditor
-                  audioFile={file}
+                  audioFile={file || undefined}
                   audioUrl={audioUrl}
                   onTrimChange={handleTrimChange}
                 />
