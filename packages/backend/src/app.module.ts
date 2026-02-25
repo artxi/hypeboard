@@ -4,6 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { BoardsModule } from './boards/boards.module';
 import { AuthModule } from './auth/auth.module';
+import { SoundsModule } from './sounds/sounds.module';
+import { UserPreferencesModule } from './user-preferences/user-preferences.module';
 import { Board, BoardSchema } from './schemas/board.schema';
 
 @Module({
@@ -28,6 +30,8 @@ import { Board, BoardSchema } from './schemas/board.schema';
     MongooseModule.forFeature([{ name: Board.name, schema: BoardSchema }]),
     AuthModule,
     BoardsModule,
+    SoundsModule,
+    UserPreferencesModule,
   ],
   controllers: [AppController],
   providers: [],
