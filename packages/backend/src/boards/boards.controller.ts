@@ -113,6 +113,7 @@ export class BoardsController {
     const transformedBoard = this.transformBoardResponse(boardObj);
 
     return {
+      _id: transformedBoard._id,
       name: transformedBoard.name,
       slug: transformedBoard.slug,
       createdBy: transformedBoard.createdBy,

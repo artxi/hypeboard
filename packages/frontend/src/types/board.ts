@@ -11,6 +11,7 @@ export interface BoardSettings {
 }
 
 export interface Board {
+  _id?: string;
   name: string;
   slug: string;
   createdBy: string;
@@ -34,6 +35,12 @@ export interface Sound {
   duration?: number;
   uploadedBy: string;
   playCount: number;
+  emoji?: string;
+  imageUrl?: string;
+  imageFileId?: string;
+  globalVolume?: number;
+  startTime?: number;
+  endTime?: number;
   createdAt: Date;
   updatedAt: Date;
 }

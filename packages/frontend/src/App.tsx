@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { SocketProvider } from './contexts/SocketContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { MainView } from './components/MainView';
@@ -41,6 +42,11 @@ function MainApp() {
     try {
       const data = await api.getUserBoards(user.username);
       setBoards(data);
+
+      // Auto-select first board if user has boards and none is selected
+      if (data.length > 0 && !selectedBoardSlug) {
+        setSelectedBoardSlug(data[0].slug);
+      }
     } catch (err: any) {
       console.error('Failed to fetch boards:', err);
     }
@@ -153,18 +159,20 @@ function MainApp() {
 function App() {
   return (
     <AuthProvider>
-      <UserProvider>
-        <ThemeProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Keep invite page as a separate route since it needs to be publicly accessible */}
-              <Route path="/invite/:code" element={<InvitePage />} />
-              {/* All other routes use the single-page app */}
-              <Route path="*" element={<MainApp />} />
-            </Routes>
-          </BrowserRouter>
-        </ThemeProvider>
-      </UserProvider>
+      <SocketProvider>
+        <UserProvider>
+          <ThemeProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Keep invite page as a separate route since it needs to be publicly accessible */}
+                <Route path="/invite/:code" element={<InvitePage />} />
+                {/* All other routes use the single-page app */}
+                <Route path="*" element={<MainApp />} />
+              </Routes>
+            </BrowserRouter>
+          </ThemeProvider>
+        </UserProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }

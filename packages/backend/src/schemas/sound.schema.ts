@@ -17,7 +17,7 @@ export class Sound {
   @Prop()
   filename: string;
 
-  @Prop({ default: 'audio/mpeg' })
+  @Prop({ required: true })
   mimeType: string;
 
   @Prop()
@@ -31,6 +31,24 @@ export class Sound {
 
   @Prop({ default: 0 })
   playCount: number;
+
+  @Prop()
+  emoji?: string;
+
+  @Prop()
+  imageUrl?: string;
+
+  @Prop({ type: Types.ObjectId })
+  imageFileId?: Types.ObjectId;
+
+  @Prop({ default: 1.0, min: 0, max: 1 })
+  globalVolume: number;
+
+  @Prop()
+  startTime?: number;
+
+  @Prop()
+  endTime?: number;
 }
 
 export const SoundSchema = SchemaFactory.createForClass(Sound);
