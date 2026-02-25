@@ -1,5 +1,25 @@
 services:
   - type: web
+    name: hypeboard-backend
+    runtime: docker
+    dockerfilePath: ./packages/backend/Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+    healthCheckPath: /
+
+  - type: web
     name: hypeboard-frontend
     env: static
     buildCommand: HUSKY=0 pnpm install --ignore-scripts && pnpm --filter frontend build
