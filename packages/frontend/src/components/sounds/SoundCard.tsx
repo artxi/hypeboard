@@ -14,6 +14,7 @@ interface SoundCardProps {
   isFavorite?: boolean;
   onVolumeChange?: (soundId: string, volume: number) => void;
   onFavoriteToggle?: (soundId: string, isFavorite: boolean) => void;
+  size?: 'small' | 'medium' | 'large';
 }
 
 export const SoundCard: React.FC<SoundCardProps> = ({
@@ -28,6 +29,7 @@ export const SoundCard: React.FC<SoundCardProps> = ({
   isFavorite = false,
   onVolumeChange,
   onFavoriteToggle,
+  size = 'medium',
 }) => {
   const [localVolume, setLocalVolume] = useState(Math.round(userVolume * 100));
 
@@ -68,7 +70,7 @@ export const SoundCard: React.FC<SoundCardProps> = ({
 
   return (
     <div
-      className={`sound-card ${isPlaying ? 'playing' : ''} ${isEditMode ? 'edit-mode' : ''}`}
+      className={`sound-card ${isPlaying ? 'playing' : ''} ${isEditMode ? 'edit-mode' : ''} size-${size}`}
       onClick={!isEditMode ? handleCardClick : undefined}
       style={{ cursor: !isEditMode ? 'pointer' : 'default' }}
     >
