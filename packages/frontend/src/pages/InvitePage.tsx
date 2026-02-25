@@ -96,8 +96,8 @@ export function InvitePage() {
       const apiError = err as ApiError;
 
       if (apiError.message?.includes('already a member')) {
-        setError('You already have access to this board. Redirecting to login...');
-        setTimeout(() => navigate('/login'), 2000);
+        setError('You already have access to this board. Redirecting...');
+        setTimeout(() => navigate(`/boards/${board.slug}`), 1000);
       } else if (apiError.message?.includes('Username already exists')) {
         setError('Username is already taken. Please choose another.');
       } else {
