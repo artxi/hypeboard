@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RegisterViaInviteDto } from './dto/register-via-invite.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -19,6 +20,11 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Post('register-via-invite')
+  async registerViaInvite(@Body() registerViaInviteDto: RegisterViaInviteDto) {
+    return this.authService.registerViaInvite(registerViaInviteDto);
   }
 
   @UseGuards(AuthGuard('local'))

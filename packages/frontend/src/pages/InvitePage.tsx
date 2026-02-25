@@ -12,15 +12,16 @@ export function InvitePage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { username, setUsername } = useUser();
+  const { username } = useUser();
 
   const [board, setBoard] = useState<Partial<Board> | null>(null);
   const [usernameInput, setUsernameInput] = useState(user?.username || username || '');
-  const [message, setMessage] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   // Pre-fill username if user is logged in
   useEffect(() => {
@@ -51,34 +52,57 @@ export function InvitePage() {
     fetchBoard();
   }, [code]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setPasswordError('');
 
-    if (!board || !usernameInput.trim()) {
-      setError('Please enter a username');
+    if (!board || !code) {
+      setError('Invalid invite link');
       return;
     }
 
-    // Check if user is already a member (if member data is available)
-    if (
-      (board.members && board.members.includes(usernameInput)) ||
-      (board.admins && board.admins.includes(usernameInput))
-    ) {
-      setUsername(usernameInput);
-      navigate(`/board/${board.slug}`);
+    // Validate inputs
+    if (usernameInput.trim().length < 3) {
+      setError('Username must be at least 3 characters');
+      return;
+    }
+
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
       return;
     }
 
     setRequesting(true);
 
     try {
-      await api.requestAccess(board.slug!, usernameInput, message || undefined);
-      setUsername(usernameInput);
-      setSuccess(true);
+      const response = await api.registerViaInvite({
+        username: usernameInput.trim(),
+        password,
+        inviteCode: code,
+      });
+
+      // Store auth token
+      localStorage.setItem('auth_token', response.accessToken);
+
+      // Navigate to board (auth context will auto-update)
+      navigate(`/boards/${response.boardSlug}`);
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message || 'Failed to request access');
+
+      if (apiError.message?.includes('already a member')) {
+        setError('You already have access to this board. Redirecting to login...');
+        setTimeout(() => navigate('/login'), 2000);
+      } else if (apiError.message?.includes('Username already exists')) {
+        setError('Username is already taken. Please choose another.');
+      } else {
+        setError(apiError.message || 'Failed to create account');
+      }
     } finally {
       setRequesting(false);
     }
@@ -108,23 +132,81 @@ export function InvitePage() {
   return (
     <div className="container">
       <Card>
-        {success ? (
-          <div className="success-message">
-            <h2>Request Sent!</h2>
-            <p>
-              Your access request has been sent to the board admin. You'll be able to access the
-              board once they approve your request.
-            </p>
-            {user ? (
-              <Button onClick={() => navigate('/')}>Back to Home</Button>
-            ) : (
-              <>
-                <p className="text-muted">Log in to access your boards</p>
-                <Button onClick={() => navigate('/login')}>Go to Login</Button>
-              </>
+        {!user ? (
+          // Registration form for non-authenticated users
+          <>
+            <h2>Create Account & Join Board</h2>
+
+            {board && (
+              <div className="board-info">
+                <h3>{board.name}</h3>
+                <p className="text-muted">Created by {board.createdBy}</p>
+              </div>
             )}
-          </div>
+
+            {error && <div className="error-message">{error}</div>}
+
+            <form onSubmit={handleRegister}>
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Choose a username"
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  required
+                  disabled={requesting}
+                  minLength={3}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="At least 6 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={requesting}
+                  minLength={6}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Re-enter password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={requesting}
+                />
+                {passwordError && (
+                  <span className="error-message" style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                    {passwordError}
+                  </span>
+                )}
+              </div>
+
+              <Button type="submit" loading={requesting} className="btn-full-width">
+                {requesting ? 'Creating Account...' : 'Create Account & Join'}
+              </Button>
+
+              <div className="text-muted" style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
+                Already have an account?{' '}
+                <a href="/login" style={{ color: 'var(--accent)' }}>
+                  Login here
+                </a>
+              </div>
+            </form>
+          </>
         ) : (
+          // For authenticated users, show simple join button
           <>
             <h2>Join Board</h2>
 
@@ -137,43 +219,14 @@ export function InvitePage() {
 
             {error && <div className="error-message">{error}</div>}
 
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="username">Your Username</label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={usernameInput}
-                  onChange={(e) => setUsernameInput(e.target.value)}
-                  required
-                  disabled={requesting || !!user}
-                  readOnly={!!user}
-                />
-                {user && (
-                  <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                    Logged in as {user.username}
-                  </p>
-                )}
-              </div>
+            <p className="text-muted">You're logged in as <strong>{user.username}</strong></p>
 
-              <div className="form-group">
-                <label htmlFor="message">Message (optional)</label>
-                <textarea
-                  id="message"
-                  className="input"
-                  placeholder="Why do you want to join?"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={3}
-                  disabled={requesting}
-                />
-              </div>
-
-              <Button type="submit" loading={requesting} className="btn-full-width">
-                Request Access
-              </Button>
-            </form>
+            <Button
+              onClick={() => navigate(`/boards/${board?.slug}`)}
+              className="btn-full-width"
+            >
+              Go to Board
+            </Button>
           </>
         )}
       </Card>

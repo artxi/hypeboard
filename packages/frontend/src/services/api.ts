@@ -5,7 +5,14 @@ import type {
   ApiError,
   Sound,
 } from '../types/board';
-import type { LoginDto, RegisterDto, AuthResponse, User } from '../types/auth';
+import type {
+  LoginDto,
+  RegisterDto,
+  AuthResponse,
+  User,
+  RegisterViaInviteDto,
+  RegisterViaInviteResponse,
+} from '../types/auth';
 import type { UserPreferences } from '../types/preferences';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -130,6 +137,13 @@ class ApiClient {
   // Auth endpoints
   async register(dto: RegisterDto): Promise<AuthResponse> {
     return this.request<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(dto),
+    });
+  }
+
+  async registerViaInvite(dto: RegisterViaInviteDto): Promise<RegisterViaInviteResponse> {
+    return this.request<RegisterViaInviteResponse>('/auth/register-via-invite', {
       method: 'POST',
       body: JSON.stringify(dto),
     });
