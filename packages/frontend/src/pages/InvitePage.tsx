@@ -90,8 +90,8 @@ export function InvitePage() {
       // Store auth token
       localStorage.setItem('auth_token', response.accessToken);
 
-      // Navigate to board (auth context will auto-update)
-      navigate(`/boards/${response.boardSlug}`);
+      // Force page navigation to trigger AuthContext refresh
+      window.location.href = `/boards/${response.boardSlug}`;
     } catch (err) {
       const apiError = err as ApiError;
 
