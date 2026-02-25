@@ -8,6 +8,7 @@ export const useAudioPlayback = (
 ) => {
   const [playingSound, setPlayingSound] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playedByRef = useRef<string | null>(null);
 
   const playSound = useCallback(
     async (soundId: string) => {
@@ -36,11 +37,18 @@ export const useAudioPlayback = (
       playedBy: string;
       timestamp: number;
     }) => {
-      const { soundId, timestamp } = data;
+      const { soundId, playedBy, timestamp } = data;
 
       try {
-        // Set playing state
+        // If the same user is playing a new sound, stop their previous sound
+        if (audioRef.current && playedByRef.current === playedBy) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+
+        // Set playing state and track who played it
         setPlayingSound(soundId);
+        playedByRef.current = playedBy;
 
         // Create and play audio
         const audio = new Audio(api.getSoundStreamUrl(soundId, username));
@@ -91,12 +99,14 @@ export const useAudioPlayback = (
           clearTimeout(fallbackTimer);
           setPlayingSound(null);
           audioRef.current = null;
+          playedByRef.current = null;
         });
 
         audio.addEventListener('error', (error) => {
           console.error('Audio playback error:', error);
           setPlayingSound(null);
           audioRef.current = null;
+          playedByRef.current = null;
         });
       } catch (error) {
         console.error('Error handling sound-playing event:', error);
@@ -113,6 +123,7 @@ export const useAudioPlayback = (
         audioRef.current.pause();
         audioRef.current = null;
       }
+      playedByRef.current = null;
     };
   }, [username, getVolume]);
 
