@@ -55,33 +55,36 @@ export const useAudioPlayback = (
         // Preload audio for faster playback
         audio.preload = 'auto';
 
-        // Wait for enough data to be loaded before playing
-        const canPlayHandler = () => {
+        // Start playback as soon as possible
+        const startPlayback = async () => {
           // Calculate time offset RIGHT before playing
           const offset = (Date.now() - timestamp) / 1000;
 
-          // Only seek if offset is significant and within duration
-          // Use a small threshold to avoid seeking for tiny delays
-          if (offset > 0.1 && audio.duration && offset < audio.duration) {
+          // Don't seek for small offsets - some platforms (Windows) need more time to start
+          // Only seek if offset is significant (>0.5s) to avoid cutting off the beginning
+          if (offset > 0.5 && audio.duration && offset < audio.duration) {
             audio.currentTime = offset;
           }
 
-          audio.play().catch((error) => {
+          // Start playing
+          try {
+            await audio.play();
+          } catch (error) {
             console.error('Error playing audio:', error);
             setPlayingSound(null);
-          });
+          }
         };
 
-        // Use 'canplaythrough' for better buffering, fallback to 'canplay'
-        audio.addEventListener('canplaythrough', canPlayHandler, { once: true });
+        // Try to play as soon as we have minimal data
+        audio.addEventListener('canplay', startPlayback, { once: true });
 
-        // Fallback: if canplaythrough takes too long, start with canplay
+        // Fallback: if canplay doesn't fire quickly, try after a short delay
         const fallbackTimer = setTimeout(() => {
           if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
-            audio.removeEventListener('canplaythrough', canPlayHandler);
-            canPlayHandler();
+            audio.removeEventListener('canplay', startPlayback);
+            startPlayback();
           }
-        }, 200); // 200ms fallback timeout
+        }, 150); // 150ms fallback timeout
 
         // Clear playing state when audio ends
         audio.addEventListener('ended', () => {
