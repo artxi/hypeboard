@@ -8,13 +8,14 @@ RUN apk add --no-cache \
     make \
     g++
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm with specific version
+RUN npm install -g pnpm@10.30.0
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy configuration and package files
+COPY .npmrc ./
 COPY package.json pnpm-lock.yaml ./
 COPY packages/backend/package.json ./packages/backend/
 
@@ -34,12 +35,13 @@ FROM node:22-alpine
 # Install FFmpeg (needed at runtime)
 RUN apk add --no-cache ffmpeg
 
-# Install pnpm
-RUN npm install -g pnpm
+# Install pnpm with specific version
+RUN npm install -g pnpm@10.30.0
 
 WORKDIR /app
 
-# Copy package files
+# Copy configuration and package files
+COPY .npmrc ./
 COPY package.json pnpm-lock.yaml ./
 COPY packages/backend/package.json ./packages/backend/
 
