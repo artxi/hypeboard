@@ -15,6 +15,8 @@ interface BoardDetailViewProps {
   slug: string;
   currentUser: { username: string };
   onBack: () => void;
+  editMode: boolean;
+  cardSize: 'small' | 'medium' | 'large';
 }
 
 export interface BoardDetailViewHandle {
@@ -22,7 +24,7 @@ export interface BoardDetailViewHandle {
 }
 
 export const BoardDetailView = forwardRef<BoardDetailViewHandle, BoardDetailViewProps>(
-  function BoardDetailView({ slug, currentUser, onBack }, ref) {
+  function BoardDetailView({ slug, currentUser, onBack, editMode, cardSize }, ref) {
   const [board, setBoard] = useState<Board | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'member' | 'none'>('none');
   const [loading, setLoading] = useState(true);
@@ -30,8 +32,6 @@ export const BoardDetailView = forwardRef<BoardDetailViewHandle, BoardDetailView
   const [adminPanelOpen, setAdminPanelOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [editingSound, setEditingSound] = useState<Sound | null>(null);
-  const [editMode, setEditMode] = useState(false);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
   const [volumeUpdateTimeouts, setVolumeUpdateTimeouts] = useState<Record<string, number>>({});
 
@@ -252,31 +252,6 @@ export const BoardDetailView = forwardRef<BoardDetailViewHandle, BoardDetailView
   return (
     <div className="board-detail">
       <div className="sounds-section">
-        {sounds.length > 0 && (
-          <div className="section-header">
-            <h3 className="section-title">Sounds</h3>
-            <span className="text-muted">
-              ({sounds.length}/{board?.settings.maxSounds || 50})
-            </span>
-            <div className="section-header-actions">
-              <Button
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                variant="secondary"
-                className="favorites-filter-button"
-              >
-                {showFavoritesOnly ? '⭐ Favorites' : 'All Sounds'}
-              </Button>
-              <Button
-                onClick={() => setEditMode(!editMode)}
-                variant="secondary"
-                className="toggle-edit-button"
-              >
-                {editMode ? '✓ Done' : '⚙️ Edit'}
-              </Button>
-            </div>
-          </div>
-        )}
-
         {soundsError ? (
           <div className="error-message">{soundsError}</div>
         ) : sounds.length === 0 ? (
@@ -297,11 +272,19 @@ export const BoardDetailView = forwardRef<BoardDetailViewHandle, BoardDetailView
             </Button>
           </div>
         ) : (
-          <div className="sounds-grid">
+          <div className={`sounds-grid size-${cardSize}`}>
             {sounds
-              .filter((sound) => {
-                if (!showFavoritesOnly) return true;
-                return userPreferences?.soundPreferences[sound._id]?.isFavorite || false;
+              .slice() // Create copy to avoid mutating original
+              .sort((a, b) => {
+                const aFavorite = userPreferences?.soundPreferences[a._id]?.isFavorite || false;
+                const bFavorite = userPreferences?.soundPreferences[b._id]?.isFavorite || false;
+
+                // Favorites first
+                if (aFavorite && !bFavorite) return -1;
+                if (!aFavorite && bFavorite) return 1;
+
+                // Maintain original order for same favorite status
+                return 0;
               })
               .map((sound) => (
                 <SoundCard
@@ -323,6 +306,7 @@ export const BoardDetailView = forwardRef<BoardDetailViewHandle, BoardDetailView
                   isFavorite={userPreferences?.soundPreferences[sound._id]?.isFavorite}
                   onVolumeChange={handleVolumeChange}
                   onFavoriteToggle={handleFavoriteToggle}
+                  size={cardSize}
                 />
               ))}
             {sounds.length > 0 && canUpload() && (

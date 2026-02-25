@@ -23,6 +23,8 @@ function MainApp() {
     return saved ? JSON.parse(saved) : false;
   });
   const [showCreateBoardModal, setShowCreateBoardModal] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [cardSize, setCardSize] = useState<'small' | 'medium' | 'large'>('medium');
 
   // Fetch boards when user is authenticated
   useEffect(() => {
@@ -35,6 +37,18 @@ function MainApp() {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  // Load cardSize and reset editMode when board changes
+  useEffect(() => {
+    if (selectedBoardSlug) {
+      const board = boards.find((b) => b.slug === selectedBoardSlug);
+      if (board?._id) {
+        const savedSize = localStorage.getItem(`cardSize_${board._id}`) as 'small' | 'medium' | 'large' | null;
+        setCardSize(savedSize || 'medium');
+      }
+    }
+    setEditMode(false); // Reset edit mode when changing boards
+  }, [selectedBoardSlug, boards]);
 
   const fetchBoards = async () => {
     if (!user) return;
@@ -96,6 +110,18 @@ function MainApp() {
     return board?.name || null;
   };
 
+  const handleCardSizeChange = (newSize: 'small' | 'medium' | 'large') => {
+    setCardSize(newSize);
+    const board = boards.find((b) => b.slug === selectedBoardSlug);
+    if (board?._id) {
+      localStorage.setItem(`cardSize_${board._id}`, newSize);
+    }
+  };
+
+  const handleEditModeToggle = () => {
+    setEditMode(!editMode);
+  };
+
   // Show loading screen during auth initialization
   if (authLoading) {
     return (
@@ -125,6 +151,12 @@ function MainApp() {
         onLogout={handleLogout}
         onLogoClick={handleLogoClick}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        {...(selectedBoardSlug && {
+          editMode,
+          cardSize,
+          onEditModeToggle: handleEditModeToggle,
+          onCardSizeChange: handleCardSizeChange,
+        })}
       />
       <div className="app-body">
         <Sidebar
@@ -150,6 +182,8 @@ function MainApp() {
           currentUser={user}
           onBoardSelect={handleSelectBoard}
           onManageBoard={() => {}}
+          editMode={editMode}
+          cardSize={cardSize}
         />
       </div>
     </div>

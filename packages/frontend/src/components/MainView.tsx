@@ -9,6 +9,8 @@ interface MainViewProps {
   currentUser: { username: string };
   onBoardSelect: (slug: string | null) => void;
   onManageBoard?: () => void;
+  editMode: boolean;
+  cardSize: 'small' | 'medium' | 'large';
 }
 
 export function MainView({
@@ -17,6 +19,8 @@ export function MainView({
   currentUser,
   onBoardSelect,
   onManageBoard,
+  editMode,
+  cardSize,
 }: MainViewProps) {
   const boardDetailRef = useRef<BoardDetailViewHandle>(null);
 
@@ -36,6 +40,8 @@ export function MainView({
             slug={selectedBoardSlug}
             currentUser={currentUser}
             onBack={() => onBoardSelect(null)}
+            editMode={editMode}
+            cardSize={cardSize}
           />
         ) : (
           <WelcomeView currentUser={currentUser} boardCount={boards.length} />
