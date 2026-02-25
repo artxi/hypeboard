@@ -21,15 +21,11 @@ services:
 
   - type: web
     name: hypeboard-frontend
-    env: static
-    buildCommand: bash build.sh
-    staticPublishPath: ./packages/frontend/dist
+    runtime: docker
+    dockerfilePath: ./packages/frontend/Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: free
     envVars:
-      - key: NODE_VERSION
-        value: 22
-      - key: HUSKY
-        value: 0
-      - key: CI
-        value: true
-      - key: SKIP_INSTALL_DEPS
-        value: true
+      - key: VITE_API_URL
+        sync: false
