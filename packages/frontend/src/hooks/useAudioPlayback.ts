@@ -37,13 +37,14 @@ export const useAudioPlayback = (
       playedBy: string;
       timestamp: number;
     }) => {
-      const { soundId, playedBy, timestamp } = data;
+      const { soundId, playedBy } = data;
 
       try {
         // If the same user is playing a new sound, stop their previous sound
         if (audioRef.current && playedByRef.current === playedBy) {
           audioRef.current.pause();
           audioRef.current = null;
+          setPlayingSound(null);
         }
 
         // Set playing state and track who played it
@@ -60,43 +61,19 @@ export const useAudioPlayback = (
           audio.volume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
         }
 
-        // Preload audio for faster playback
-        audio.preload = 'auto';
-
-        // Start playback as soon as possible
-        const startPlayback = async () => {
-          // Calculate time offset RIGHT before playing
-          const offset = (Date.now() - timestamp) / 1000;
-
-          // Don't seek for small offsets - some platforms (Windows) need more time to start
-          // Only seek if offset is significant (>0.5s) to avoid cutting off the beginning
-          if (offset > 0.5 && audio.duration && offset < audio.duration) {
-            audio.currentTime = offset;
-          }
-
-          // Start playing
+        // Play as soon as ready - no synchronization, just play from beginning
+        audio.addEventListener('canplaythrough', async () => {
           try {
             await audio.play();
           } catch (error) {
             console.error('Error playing audio:', error);
             setPlayingSound(null);
+            playedByRef.current = null;
           }
-        };
-
-        // Try to play as soon as we have minimal data
-        audio.addEventListener('canplay', startPlayback, { once: true });
-
-        // Fallback: if canplay doesn't fire quickly, try after a short delay
-        const fallbackTimer = setTimeout(() => {
-          if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
-            audio.removeEventListener('canplay', startPlayback);
-            startPlayback();
-          }
-        }, 150); // 150ms fallback timeout
+        }, { once: true });
 
         // Clear playing state when audio ends
         audio.addEventListener('ended', () => {
-          clearTimeout(fallbackTimer);
           setPlayingSound(null);
           audioRef.current = null;
           playedByRef.current = null;
